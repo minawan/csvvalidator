@@ -6,6 +6,7 @@ Tests for the `csvvalidator` module.
 
 import logging
 import math
+import sys
 
 from csvvalidator import CSVValidator, VALUE_CHECK_FAILED, MESSAGES,\
     HEADER_CHECK_FAILED, RECORD_LENGTH_CHECK_FAILED, enumeration, match_pattern,\
@@ -1203,3 +1204,37 @@ def test_guard_conditions():
         assert False, 'expected exception'
 
 
+def test_schema_checks():
+    """Test some schema."""
+    schema = """version 1.0
+@totalColumns 3
+// This is a comment
+unimplemented
+"""
+    field_names = ('foo', 'bar', 'baz')
+    validator = CSVValidator(field_names)
+    validator.add_schema_check(schema)
+
+    # some test data
+    valid_data = (
+            ('foo', 'bar', 'baz'),
+            ('12', '3.4', '5.6'),
+            )
+
+    # run the validator on the test data
+    problems = validator.validate(valid_data)
+
+    assert len(problems) == 0
+
+    field_names = ('foo', 'bar')
+    validator = CSVValidator(field_names)
+    validator.add_schema_check(schema)
+    invalid_data = (
+            ('foo', 'bar'),
+            ('12', '3.4'),
+            )
+    # run the validator on the test data
+    problems = validator.validate(invalid_data)
+
+    assert len(problems) == 1
+    write_problems(problems, sys.stdout)

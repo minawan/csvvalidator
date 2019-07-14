@@ -80,6 +80,11 @@ see the example.py and tests.py modules in the source code repository.
 
 import re
 from datetime import datetime
+from CsvSchemaLexer import CsvSchemaLexer
+from CsvSchemaParser import CsvSchemaParser
+from CsvSchemaVisitor import CsvSchemaVisitor
+from antlr4 import CommonTokenStream
+from antlr4 import InputStream
 
 
 UNEXPECTED_EXCEPTION = 0
@@ -371,7 +376,42 @@ class CSVValidator(object):
         defined by:
         https://digital-preservation.github.io/csv-schema/csv-schema-1.1.html
         """
-        pass
+        print schema
+        lexemes = InputStream(schema)
+        lexer = CsvSchemaLexer(lexemes)
+        tokens = CommonTokenStream(lexer)
+        parser = CsvSchemaParser(tokens)
+        tree = parser.schema()
+
+        class MyCsvSchemaVisitor(CsvSchemaVisitor):
+            def registerCsvValidator(self, validator):
+                self.validator = validator
+            def visitSchema(self, context):
+                print 'visitSchema', context.getText()
+                self.visit(context.prolog())
+            def visitProlog(self, context):
+                print 'visitProlog', context.getText()
+                print context.VersionDecl().getText()
+                self.visit(context.globalDirectives())
+            def visitGlobalDirectives(self, context):
+                print 'visitGlobalDirectives', context.getText()
+                self.visit(context.totalColumnsDirective())
+            def visitTotalColumnsDirective(self, context):
+                print 'visitTotalColumnsDirective', context.getText()
+                totalColumns = int(context.PositiveNonZeroIntegerLiteral().getText())
+                def check_record_length(r):
+                    print r
+                    if len(r) != totalColumns:
+                        raise RecordError('TotalColumnsDirective',
+                                          'Unexpected record length. '
+                                          'Expected: ' + str(totalColumns)
+                                          + ', Actual: ' + str(len(r)))
+                self.validator.add_record_check(check_record_length)
+
+        visitor = MyCsvSchemaVisitor()
+        visitor.registerCsvValidator(self)
+        visitor.visit(tree)
+
 
     def validate(self, data,
                  expect_header_row=True,
