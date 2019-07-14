@@ -365,6 +365,14 @@ class CSVValidator(object):
         self._skips.append(skip)
 
 
+    def add_schema_check(self, schema):
+        """
+        Add a check against schema supplied. The input schema follows the format
+        defined by:
+        https://digital-preservation.github.io/csv-schema/csv-schema-1.1.html
+        """
+        pass
+
     def validate(self, data,
                  expect_header_row=True,
                  ignore_lines=0,
