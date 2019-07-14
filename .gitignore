@@ -4,4 +4,8 @@
 dist
 build
 MANIFEST
-
+*.interp
+*.tokens
+CsvSchemaLexer.py
+CsvSchemaParser.py
+CsvSchemaVisitor.py
