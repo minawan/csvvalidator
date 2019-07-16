@@ -1237,4 +1237,39 @@ unimplemented
     problems = validator.validate(invalid_data)
 
     assert len(problems) == 1
+    #write_problems(problems, sys.stdout)
+
+
+def test_schema_checks():
+    """Test some schema."""
+    schema = """version 1.0
+// This is a comment
+is("data")
+"""
+    field_names = ('foo', 'bar', 'baz')
+    validator = CSVValidator(field_names)
+    validator.add_schema_check(schema)
+
+    # some test data
+    valid_data = (
+            ('foo', 'bar', 'baz'),
+            ('"data"', '"data"', '"data"'),
+            )
+
+    # run the validator on the test data
+    problems = validator.validate(valid_data)
+
+    assert len(problems) == 0
+
+    field_names = ('foo', 'bar')
+    validator = CSVValidator(field_names)
+    validator.add_schema_check(schema)
+    invalid_data = (
+            ('foo', 'bar'),
+            ('"data"', '"invalid"'),
+            )
+    # run the validator on the test data
+    problems = validator.validate(invalid_data)
+
+    assert len(problems) == 1
     write_problems(problems, sys.stdout)

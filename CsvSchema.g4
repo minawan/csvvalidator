@@ -14,7 +14,7 @@ VersionDecl
     ;
 
 globalDirectives
-    : totalColumnsDirective
+    : totalColumnsDirective?
     ;
 
 DirectivePrefix
@@ -35,6 +35,15 @@ body
 
 bodyPart
     : 'unimplemented'
+    | isExpr
+    ;
+
+isExpr
+    : 'is(' StringLiteral ')'
+    ;
+
+StringLiteral
+    : '"' ~["]* '"'
     ;
 
 SingleLineComment

@@ -389,24 +389,43 @@ class CSVValidator(object):
             def visitSchema(self, context):
                 print 'visitSchema', context.getText()
                 self.visit(context.prolog())
+                self.visit(context.body())
             def visitProlog(self, context):
                 print 'visitProlog', context.getText()
                 print context.VersionDecl().getText()
                 self.visit(context.globalDirectives())
             def visitGlobalDirectives(self, context):
                 print 'visitGlobalDirectives', context.getText()
-                self.visit(context.totalColumnsDirective())
+                totalColumnsDirective = context.totalColumnsDirective()
+                if totalColumnsDirective:
+                    self.visit(context.totalColumnsDirective())
             def visitTotalColumnsDirective(self, context):
                 print 'visitTotalColumnsDirective', context.getText()
                 totalColumns = int(context.PositiveNonZeroIntegerLiteral().getText())
                 def check_record_length(r):
-                    print r
                     if len(r) != totalColumns:
                         raise RecordError('TotalColumnsDirective',
                                           'Unexpected record length. '
                                           'Expected: ' + str(totalColumns)
                                           + ', Actual: ' + str(len(r)))
                 self.validator.add_record_check(check_record_length)
+            def visitBody(self, context):
+                print 'visitBody', context.getText()
+                for bodyPart in context.bodyPart():
+                    self.visit(bodyPart)
+            def visitBodyPart(self, context):
+                print 'visitBodyPart', context.getText()
+                self.visit(context.isExpr())
+            def visitIsExpr(self, context):
+                print 'visitIsExpr', context.getText()
+                def check_record_is(r):
+                    literal = context.StringLiteral().getText()
+                    for v in r.values():
+                        if v != literal:
+                            raise RecordError('IsExpr', 'Field does not match. '
+                                              'Expected: ' + literal
+                                              + ', Actual: ' + v)
+                self.validator.add_record_check(check_record_is)
 
         visitor = MyCsvSchemaVisitor()
         visitor.registerCsvValidator(self)
