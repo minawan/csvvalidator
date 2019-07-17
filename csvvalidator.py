@@ -417,19 +417,26 @@ class CSVValidator(object):
                     self.visit(bodyPart)
             def visitBodyPart(self, context):
                 print 'visitBodyPart', context.getText()
+                columnDefinition = context.columnDefinition()
+                if columnDefinition:
+                    self.visit(columnDefinition)
+            def visitColumnDefinition(self, context):
+                print 'visitColumnDefinition', context.getText()
+                columnIdentifier = context.ColumnIdentifier().getText()
                 isExpr = context.isExpr()
                 if isExpr:
-                    self.visit(context.isExpr())
+                    literal = self.visit(context.isExpr())
+                    def check_record_is(r):
+                        if r[columnIdentifier] != literal:
+                            raise RecordError('IsExpr',
+                                              'Field does not match. '
+                                              'Expected: ' + literal
+                                              + ', Actual: '
+                                              + r[columnIdentifier])
+                    self.validator.add_record_check(check_record_is)
             def visitIsExpr(self, context):
                 print 'visitIsExpr', context.getText()
-                def check_record_is(r):
-                    literal = context.StringLiteral().getText()
-                    for v in r.values():
-                        if v != literal:
-                            raise RecordError('IsExpr', 'Field does not match. '
-                                              'Expected: ' + literal
-                                              + ', Actual: ' + v)
-                self.validator.add_record_check(check_record_is)
+                return context.StringLiteral().getText()
 
         visitor = MyCsvSchemaVisitor()
         visitor.registerCsvValidator(self)

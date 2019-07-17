@@ -35,11 +35,19 @@ body
 
 bodyPart
     : 'unimplemented'
-    | isExpr
+    | columnDefinition
+    ;
+
+columnDefinition
+    : ColumnIdentifier ':' isExpr
     ;
 
 isExpr
     : 'is(' StringLiteral ')'
+    ;
+
+ColumnIdentifier
+    : (('A .. Z') | ('a' .. 'z') | ('0' .. '9' ) | [-_.])+
     ;
 
 StringLiteral

@@ -1244,7 +1244,7 @@ def test_schema_checks_is_expr():
     """Test some schema."""
     schema = """version 1.0
 // This is a comment
-is("data")
+foo: is("data")
 """
     field_names = ('foo', 'bar', 'baz')
     validator = CSVValidator(field_names)
@@ -1253,7 +1253,7 @@ is("data")
     # some test data
     valid_data = (
             ('foo', 'bar', 'baz'),
-            ('"data"', '"data"', '"data"'),
+            ('"data"', '"data2"', '"data"'),
             )
 
     # run the validator on the test data
@@ -1266,10 +1266,11 @@ is("data")
     validator.add_schema_check(schema)
     invalid_data = (
             ('foo', 'bar'),
-            ('"data"', '"invalid"'),
+            ('"invalid"', '"data"'),
+            ('"data"', '"data2"'),
             )
     # run the validator on the test data
     problems = validator.validate(invalid_data)
 
     assert len(problems) == 1
-    #write_problems(problems, sys.stdout)
+    write_problems(problems, sys.stdout)
