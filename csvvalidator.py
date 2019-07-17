@@ -389,7 +389,9 @@ class CSVValidator(object):
             def visitSchema(self, context):
                 print 'visitSchema', context.getText()
                 self.visit(context.prolog())
-                self.visit(context.body())
+                body = context.body()
+                if body:
+                    self.visit(context.body())
             def visitProlog(self, context):
                 print 'visitProlog', context.getText()
                 print context.VersionDecl().getText()
@@ -415,7 +417,9 @@ class CSVValidator(object):
                     self.visit(bodyPart)
             def visitBodyPart(self, context):
                 print 'visitBodyPart', context.getText()
-                self.visit(context.isExpr())
+                isExpr = context.isExpr()
+                if isExpr:
+                    self.visit(context.isExpr())
             def visitIsExpr(self, context):
                 print 'visitIsExpr', context.getText()
                 def check_record_is(r):

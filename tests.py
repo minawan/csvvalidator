@@ -1204,7 +1204,7 @@ def test_guard_conditions():
         assert False, 'expected exception'
 
 
-def test_schema_checks():
+def test_schema_checks_total_columns_directive():
     """Test some schema."""
     schema = """version 1.0
 @totalColumns 3
@@ -1240,7 +1240,7 @@ unimplemented
     #write_problems(problems, sys.stdout)
 
 
-def test_schema_checks():
+def test_schema_checks_is_expr():
     """Test some schema."""
     schema = """version 1.0
 // This is a comment
@@ -1272,4 +1272,4 @@ is("data")
     problems = validator.validate(invalid_data)
 
     assert len(problems) == 1
-    write_problems(problems, sys.stdout)
+    #write_problems(problems, sys.stdout)
