@@ -39,11 +39,20 @@ bodyPart
     ;
 
 columnDefinition
-    : ColumnIdentifier ':' isExpr
+    : ColumnIdentifier ':' singleExpr
+    ;
+
+singleExpr
+    : isExpr
+    | notExpr
     ;
 
 isExpr
     : 'is(' StringLiteral ')'
+    ;
+
+notExpr
+    : 'not(' StringLiteral ')'
     ;
 
 ColumnIdentifier

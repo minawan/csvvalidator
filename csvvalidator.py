@@ -423,20 +423,39 @@ class CSVValidator(object):
             def visitColumnDefinition(self, context):
                 print 'visitColumnDefinition', context.getText()
                 columnIdentifier = context.ColumnIdentifier().getText()
+                singleExpr = context.singleExpr()
+                if singleExpr:
+                    rule, literal = self.visit(singleExpr)
+                    if rule == 'is':
+                        def check_record_is(r):
+                            if r[columnIdentifier] != literal:
+                                raise RecordError('IsExpr',
+                                                  'Field does not match. '
+                                                  'Expected: ' + literal
+                                                  + ', Actual: '
+                                                  + r[columnIdentifier])
+                        self.validator.add_record_check(check_record_is)
+                    elif rule == 'not':
+                        def check_record_not(r):
+                            if r[columnIdentifier] == literal:
+                                raise RecordError('NotExpr',
+                                                  'Unexpected: ' + literal)
+                        self.validator.add_record_check(check_record_not)
+            def visitSingleExpr(self, context):
+                print 'visitSingleExpr', context.getText()
                 isExpr = context.isExpr()
                 if isExpr:
-                    literal = self.visit(context.isExpr())
-                    def check_record_is(r):
-                        if r[columnIdentifier] != literal:
-                            raise RecordError('IsExpr',
-                                              'Field does not match. '
-                                              'Expected: ' + literal
-                                              + ', Actual: '
-                                              + r[columnIdentifier])
-                    self.validator.add_record_check(check_record_is)
+                    return self.visit(isExpr)
+                notExpr = context.notExpr()
+                if notExpr:
+                    return self.visit(notExpr)
+                assert False, 'No single expression found'
             def visitIsExpr(self, context):
                 print 'visitIsExpr', context.getText()
-                return context.StringLiteral().getText()
+                return 'is', context.StringLiteral().getText()
+            def visitNotExpr(self, context):
+                print 'visitNotExpr', context.getText()
+                return 'not', context.StringLiteral().getText()
 
         visitor = MyCsvSchemaVisitor()
         visitor.registerCsvValidator(self)

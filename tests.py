@@ -1274,3 +1274,38 @@ foo: is("data")
 
     assert len(problems) == 1
     write_problems(problems, sys.stdout)
+
+
+def test_schema_checks_not_expr():
+    """Test some schema."""
+    schema = """version 1.0
+// This is a comment
+foo: not("data")
+"""
+    field_names = ('foo', 'bar', 'baz')
+    validator = CSVValidator(field_names)
+    validator.add_schema_check(schema)
+
+    # some test data
+    invalid_data = (
+            ('foo', 'bar', 'baz'),
+            ('"data"', '"data2"', '"data"'),
+            )
+
+    # run the validator on the test data
+    problems = validator.validate(invalid_data)
+    write_problems(problems, sys.stdout)
+
+    assert len(problems) == 1
+
+    field_names = ('foo', 'bar')
+    validator = CSVValidator(field_names)
+    validator.add_schema_check(schema)
+    valid_data = (
+            ('foo', 'bar'),
+            ('"valid"', '"data"'),
+            )
+    # run the validator on the test data
+    problems = validator.validate(valid_data)
+
+    assert len(problems) == 0
