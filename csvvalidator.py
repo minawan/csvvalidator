@@ -383,6 +383,15 @@ class CSVValidator(object):
         parser = CsvSchemaParser(tokens)
         tree = parser.schema()
 
+        class MyCondition():
+            def __init__(self, column, regex):
+                self.column = column
+                self.checker = match_pattern(regex)
+            def __call__(self, row):
+                self.checker(row[self.column])
+            def __name__(self):
+                return 'Condition for ' + self.column
+
         class MyCsvSchemaVisitor(CsvSchemaVisitor):
             def registerCsvValidator(self, validator):
                 self.validator = validator
@@ -425,22 +434,8 @@ class CSVValidator(object):
                 columnIdentifier = context.ColumnIdentifier().getText()
                 singleExpr = context.singleExpr()
                 if singleExpr:
-                    rule, literal = self.visit(singleExpr)
-                    if rule == 'is':
-                        def check_record_is(r):
-                            if r[columnIdentifier] != literal:
-                                raise RecordError('IsExpr',
-                                                  'Field does not match. '
-                                                  'Expected: ' + literal
-                                                  + ', Actual: '
-                                                  + r[columnIdentifier])
-                        self.validator.add_record_check(check_record_is)
-                    elif rule == 'not':
-                        def check_record_not(r):
-                            if r[columnIdentifier] == literal:
-                                raise RecordError('NotExpr',
-                                                  'Unexpected: ' + literal)
-                        self.validator.add_record_check(check_record_not)
+                    regex = self.visit(singleExpr)
+                    self.validator.add_record_check(MyCondition(columnIdentifier, regex))
             def visitSingleExpr(self, context):
                 print 'visitSingleExpr', context.getText()
                 isExpr = context.isExpr()
@@ -452,10 +447,10 @@ class CSVValidator(object):
                 assert False, 'No single expression found'
             def visitIsExpr(self, context):
                 print 'visitIsExpr', context.getText()
-                return 'is', context.StringLiteral().getText()
+                return context.StringLiteral().getText()
             def visitNotExpr(self, context):
                 print 'visitNotExpr', context.getText()
-                return 'not', context.StringLiteral().getText()
+                return '(?!' + context.StringLiteral().getText() + ')'
 
         visitor = MyCsvSchemaVisitor()
         visitor.registerCsvValidator(self)
